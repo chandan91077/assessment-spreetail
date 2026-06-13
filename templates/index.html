@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spreetail — Shared Expenses</title>
+  <meta name="description" content="Split bills, track expenses, and settle debts with your flatmates. Clean, transparent, and fair." />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════
+     AUTH SCREEN
+═══════════════════════════════════════════════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <h1>💸 Spreetail</h1>
+      <p>Shared expenses, zero drama</p>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</div>
+      <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form">
+      <div id="login-error" class="alert alert-error hidden"></div>
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <input id="login-username" type="text" placeholder="e.g. aisha" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" placeholder="password123" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary w-full" onclick="doLogin()">Sign In →</button>
+      <p class="text-center text-muted text-small mt-16">
+        Pre-seeded: aisha / rohan / priya / meera / sam — all with <code>password123</code>
+      </p>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form" class="hidden">
+      <div id="register-error" class="alert alert-error hidden"></div>
+      <div class="form-group">
+        <label for="reg-username">Username</label>
+        <input id="reg-username" type="text" placeholder="lowercase, no spaces" />
+      </div>
+      <div class="form-group">
+        <label for="reg-displayname">Display Name</label>
+        <input id="reg-displayname" type="text" placeholder="How others will see you" />
+      </div>
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <input id="reg-password" type="password" placeholder="Choose a password" />
+      </div>
+      <button class="btn btn-primary w-full" onclick="doRegister()">Create Account →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════════════════════════════ -->
+<div id="app-screen">
+  <div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-brand">💸 Spreetail</div>
+
+      <div class="sidebar-section-label">Navigation</div>
+      <div class="nav-item active" id="nav-dashboard"  onclick="showPage('dashboard')">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+      <div class="nav-item" id="nav-groups"     onclick="showPage('groups')">
+        <span class="nav-icon">👥</span> Groups
+      </div>
+      <div class="nav-item" id="nav-expenses"   onclick="showPage('expenses')">
+        <span class="nav-icon">💳</span> Expenses
+      </div>
+      <div class="nav-item" id="nav-balances"   onclick="showPage('balances')">
+        <span class="nav-icon">⚖️</span> Balances
+      </div>
+      <div class="nav-item" id="nav-settlements" onclick="showPage('settlements')">
+        <span class="nav-icon">✅</span> Settle Up
+      </div>
+      <div class="nav-item" id="nav-import"     onclick="showPage('import')">
+        <span class="nav-icon">📂</span> Import CSV
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-chip">
+          <div class="user-avatar" id="sidebar-avatar">?</div>
+          <div>
+            <div class="user-chip-name" id="sidebar-username">–</div>
+            <div class="text-small text-muted">Member</div>
+          </div>
+          <div class="user-chip-logout" onclick="doLogout()" title="Logout">⏻</div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- ── DASHBOARD ───────────────────────────────────────── -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Good to see you, <span id="dash-name">–</span> 👋</div>
+            <div class="page-subtitle">Here's your current snapshot</div>
+          </div>
+          <button class="btn btn-primary" onclick="showPage('expenses'); openExpenseModal()">+ Add Expense</button>
+        </div>
+
+        <div class="stat-cards" id="dash-stats">
+          <div class="stat-card">
+            <div class="stat-label">YOUR NET BALANCE</div>
+            <div class="stat-value neutral" id="dash-net">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">TOTAL PAID</div>
+            <div class="stat-value positive" id="dash-paid">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">TOTAL OWED</div>
+            <div class="stat-value negative" id="dash-owed">₹0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">ACTIVE GROUP</div>
+            <div class="stat-value neutral" id="dash-group">–</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="mb-16" style="font-size:1rem;font-weight:600;">🎯 Who Owes Whom</h3>
+          <div id="dash-settlements"></div>
+        </div>
+      </div>
+
+      <!-- ── GROUPS ──────────────────────────────────────────── -->
+      <div class="page" id="page-groups">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Groups</div>
+            <div class="page-subtitle">Manage your expense groups</div>
+          </div>
+          <button class="btn btn-primary" onclick="openGroupModal()">+ New Group</button>
+        </div>
+        <div class="cards-grid" id="groups-grid">
+          <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3>No groups yet</h3>
+            <p>Create your first group to start splitting expenses.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EXPENSES ────────────────────────────────────────── -->
+      <div class="page" id="page-expenses">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Expenses</div>
+            <div class="page-subtitle">All expenses in the active group</div>
+          </div>
+          <button class="btn btn-primary" onclick="openExpenseModal()">+ Add Expense</button>
+        </div>
+        <div id="no-group-warning" class="alert alert-warning hidden">
+          ⚠️ Please select a group first from the Groups page.
+        </div>
+        <div class="table-wrapper">
+          <table id="expenses-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Currency</th>
+                <th>Paid By</th>
+                <th>Split</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-tbody"></tbody>
+          </table>
+        </div>
+        <div id="expenses-empty" class="empty-state hidden">
+          <div class="empty-state-icon">💳</div>
+          <h3>No expenses yet</h3>
+          <p>Add your first expense or import from CSV.</p>
+        </div>
+      </div>
+
+      <!-- ── BALANCES ────────────────────────────────────────── -->
+      <div class="page" id="page-balances">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Balances</div>
+            <div class="page-subtitle">Net balance per person — click any card to see the breakdown</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadBalances()">↻ Refresh</button>
+        </div>
+        <div id="balances-grid" class="cards-grid" style="grid-template-columns: 1fr;"></div>
+      </div>
+
+      <!-- ── SETTLE UP ───────────────────────────────────────── -->
+      <div class="page" id="page-settlements">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Settle Up</div>
+            <div class="page-subtitle">Record a payment between two people</div>
+          </div>
+          <button class="btn btn-primary" onclick="openSettlementModal()">+ Record Payment</button>
+        </div>
+        <div class="table-wrapper">
+          <table id="settlements-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Amount</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="settlements-tbody"></tbody>
+          </table>
+        </div>
+        <div id="settlements-empty" class="empty-state hidden">
+          <div class="empty-state-icon">✅</div>
+          <h3>No settlements yet</h3>
+          <p>Record payments using the button above.</p>
+        </div>
+      </div>
+
+      <!-- ── IMPORT CSV ──────────────────────────────────────── -->
+      <div class="page" id="page-import">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Import CSV</div>
+            <div class="page-subtitle">Upload expenses_export.csv — anomalies are detected and surfaced for review</div>
+          </div>
+        </div>
+
+        <!-- Upload zone -->
+        <div id="import-upload-section">
+          <div class="card mb-16">
+            <div class="form-group">
+              <label for="import-group-select">Target Group</label>
+              <select id="import-group-select"></select>
+            </div>
+          </div>
+          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-file-input').click()"
+               ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+            <div class="upload-zone-icon">📁</div>
+            <div class="upload-zone-text">Click or drag &amp; drop your CSV file here</div>
+            <div class="upload-zone-hint">Accepts <code>expenses_export.csv</code> only</div>
+          </div>
+          <input type="file" id="csv-file-input" accept=".csv" class="hidden" onchange="handleFileSelect(event)" />
+          <div id="import-loading" class="hidden text-center mt-16">
+            <div class="spinner"></div>
+            <p class="text-muted mt-16">Analysing your CSV…</p>
+          </div>
+        </div>
+
+        <!-- Import report -->
+        <div id="import-report-section" class="hidden">
+          <div class="import-progress" id="import-stats"></div>
+
+          <div class="card">
+            <div class="flex-between mb-16">
+              <h3 style="font-size:1rem;font-weight:600;">🔍 Anomaly Report</h3>
+              <div class="flex gap-8">
+                <button class="btn btn-secondary btn-sm" onclick="approveAllAnomalies()">✅ Approve All</button>
+                <button class="btn btn-secondary btn-sm" onclick="copyReport()">📋 Copy Report</button>
+                <button class="btn btn-secondary btn-sm" onclick="resetImport()">↩ New Import</button>
+              </div>
+            </div>
+            <div id="anomalies-list"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════════════════════ -->
+
+<!-- Group Modal -->
+<div class="modal-overlay" id="group-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create Group</div>
+      <div class="modal-close" onclick="closeModal('group-modal')">✕</div>
+    </div>
+    <div class="form-group">
+      <label for="group-name">Group Name</label>
+      <input id="group-name" type="text" placeholder="e.g. The Flat, Goa Trip" />
+    </div>
+    <div class="form-group">
+      <label for="group-desc">Description (optional)</label>
+      <textarea id="group-desc" placeholder="What's this group for?"></textarea>
+    </div>
+    <div id="group-error" class="alert alert-error hidden"></div>
+    <button class="btn btn-primary w-full" onclick="createGroup()">Create Group</button>
+  </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal-overlay" id="add-member-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add Member</div>
+      <div class="modal-close" onclick="closeModal('add-member-modal')">✕</div>
+    </div>
+    <div class="form-group">
+      <label for="member-user-select">Select User</label>
+      <select id="member-user-select"></select>
+    </div>
+    <div class="form-group">
+      <label for="member-join-date">Joined On</label>
+      <input id="member-join-date" type="date" />
+    </div>
+    <div id="add-member-error" class="alert alert-error hidden"></div>
+    <button class="btn btn-primary w-full" onclick="addMember()">Add Member</button>
+  </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal-overlay" id="expense-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title" id="expense-modal-title">Add Expense</div>
+      <div class="modal-close" onclick="closeModal('expense-modal')">✕</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="exp-description">Description</label>
+        <input id="exp-description" type="text" placeholder="e.g. Groceries, Rent" />
+      </div>
+      <div class="form-group">
+        <label for="exp-date">Date</label>
+        <input id="exp-date" type="date" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="exp-amount">Amount</label>
+        <input id="exp-amount" type="number" step="0.01" placeholder="0.00" oninput="updateSplitPreview()" />
+      </div>
+      <div class="form-group">
+        <label for="exp-currency">Currency</label>
+        <select id="exp-currency" onchange="updateSplitPreview()">
+          <option value="INR">₹ INR</option>
+          <option value="USD">$ USD</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="exp-paid-by">Paid By</label>
+        <select id="exp-paid-by"></select>
+      </div>
+      <div class="form-group">
+        <label for="exp-split-type">Split Type</label>
+        <select id="exp-split-type" onchange="onSplitTypeChange()">
+          <option value="equal">Equal</option>
+          <option value="exact">Exact Amounts</option>
+          <option value="percentage">Percentage</option>
+          <option value="shares">Shares</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="split-builder" id="split-builder">
+      <label>Split Details</label>
+      <div id="split-members-list"></div>
+      <div class="text-small text-muted mt-8" id="split-total-preview"></div>
+    </div>
+
+    <div id="expense-error" class="alert alert-error hidden mt-16"></div>
+    <button class="btn btn-primary w-full mt-16" onclick="saveExpense()">Save Expense</button>
+  </div>
+</div>
+
+<!-- Settlement Modal -->
+<div class="modal-overlay" id="settlement-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Record Payment</div>
+      <div class="modal-close" onclick="closeModal('settlement-modal')">✕</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="set-payer">Who Paid</label>
+        <select id="set-payer"></select>
+      </div>
+      <div class="form-group">
+        <label for="set-payee">Paid To</label>
+        <select id="set-payee"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="set-amount">Amount (₹)</label>
+        <input id="set-amount" type="number" step="0.01" placeholder="0.00" />
+      </div>
+      <div class="form-group">
+        <label for="set-date">Date</label>
+        <input id="set-date" type="date" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="set-notes">Notes (optional)</label>
+      <input id="set-notes" type="text" placeholder="e.g. UPI transfer" />
+    </div>
+    <div id="settlement-error" class="alert alert-error hidden"></div>
+    <button class="btn btn-primary w-full" onclick="saveSettlement()">Record Payment</button>
+  </div>
+</div>
+
+<!-- Balance Breakdown Modal -->
+<div class="modal-overlay" id="breakdown-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-title" id="breakdown-title">Balance Breakdown</div>
+      <div class="modal-close" onclick="closeModal('breakdown-modal')">✕</div>
+    </div>
+    <div class="stat-cards" style="margin-bottom:16px;" id="breakdown-stats"></div>
+    <div id="breakdown-list"></div>
+  </div>
+</div>
+
+<!-- Group Detail Modal -->
+<div class="modal-overlay" id="group-detail-modal">
+  <div class="modal" style="max-width: 640px;">
+    <div class="modal-header">
+      <div class="modal-title" id="gd-title">Group Detail</div>
+      <div class="modal-close" onclick="closeModal('group-detail-modal')">✕</div>
+    </div>
+    <div id="gd-members-list"></div>
+    <div class="mt-16">
+      <button class="btn btn-secondary btn-sm" onclick="openAddMemberModal()">+ Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
