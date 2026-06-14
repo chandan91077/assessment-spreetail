@@ -1,0 +1,31 @@
+date,description,amount,currency,paid_by,split_type,split_details,notes
+2024-02-01,Rent February,12000,INR,Aisha,equal,,
+2024-02-03,Groceries week 1,2340,INR,Rohan,equal,,
+March 5 2024,Electricity February,1800,INR,Priya,equal,,Anomaly: inconsistent date format (plain English)
+2024-02-10,Dinner at Spice Garden,3200,INR,Meera,equal,,
+2024-02-15,Internet bill,999,INR,Aisha,equal,,
+,Water bill February,600,INR,,equal,,Anomaly: missing paid_by field
+2024-02-20,Groceries week 3,-500,INR,Rohan,equal,,Anomaly: negative amount - possible refund or error
+2024-02-22,Movie night,1500,INR,Priya,percentage,"Aisha:30,Rohan:20,Priya:30,Meera:20",
+2024-03-01,Rent March,12000,INR,Aisha,equal,,
+2024-02-10,Dinner at Spice Garden,₹3800,INR,Rohan,equal,,Anomaly: duplicate dinner (different payer + amount) + currency symbol in amount
+2024-03-05,Groceries March week 1,1950,INR,Meera,equal,,
+05-03-2024,Electricity March,1900,INR,Rohan,equal,,Anomaly: inconsistent date format (DD-MM-YYYY)
+2024-03-10,Weekend trip hotel,4500,USD,Priya,equal,,Anomaly: USD amount with no conversion
+2024-03-10,Weekend trip meals,1200,USD,Dev,equal,,Anomaly: USD amount + unknown member Dev
+2024-03-12,Weekend trip transport,800,USD,Aisha,50/50,,Anomaly: non-standard split type label
+2024-03-15,Groceries March week 2,2100,INR,Priya,equal,,
+2024-03-20,OTT subscriptions,649,INR,Rohan,shares,"Aisha:1,Rohan:2,Priya:1,Meera:1",
+2024-03-22,Rohan pays Aisha back,2500,INR,Rohan,exact,"Aisha:2500",Anomaly: this is a settlement not an expense
+2024-03-28,House party supplies,3600,INR,Aisha,percentage,"Aisha:30,Rohan:30,Priya:30",Anomaly: percentages sum to 90 not 100
+2024-04-01,Rent April,12000,INR,Rohan,equal,,
+2024-04-02,Electricity April,1750,INR,Meera,equal,,Anomaly: Meera left March 31 - post-departure expense
+2024-04-05,Groceries April week 1,2200,INR,Priya,equal,,
+2024-03-15,Internet bill March,999,INR,Sam,equal,,Anomaly: Sam joined April 15 - pre-join expense
+2024-04-10,Grocery run,1800,INR,Sam,equal,,
+2024-04-12,Lunch special,0,INR,Aisha,equal,,Anomaly: zero amount expense
+2026-12-25,Christmas party advance booking,5000,INR,Rohan,equal,,Anomaly: future dated expense
+2024/03/08,Water bill March,600,INR,Priya,equal,,Anomaly: inconsistent date format (YYYY/MM/DD)
+2024-04-20,Groceries April week 2,2450,INR,Aisha,equal,,
+2024-04-25,Electricity April final,1750,INR,Sam,equal,,
+2024-04-30,Internet April,999,INR,Priya,equal,,
